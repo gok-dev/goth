@@ -154,4 +154,31 @@ defmodule Goth.TokenStoreTest do
     {:ok, %Token{account: ^account2} = token2} = TokenStore.find({account2, scopes}, sub)
     assert token1 != token2
   end
+
+  test "clear/1" do
+    token1 = %Token{
+      token: "123",
+      type: "Bearer",
+      sub: nil,
+      expires: :os.system_time(:seconds) + 1000,
+      account: "account1@example.com"
+    }
+
+    token2 = %Token{
+      token: "123",
+      type: "Bearer",
+      sub: nil,
+      expires: :os.system_time(:seconds) + 1000,
+      account: "account1@example.com"
+    }
+
+    TokenStore.store({:default, "scope1"}, token1)
+    TokenStore.store({:default, "scope2"}, token2)
+    assert {:ok, token1} = TokenStore.find({:default, "scope1"}, nil)
+    assert {:ok, token2} = TokenStore.find({:default, "scope2"}, nil)
+
+    assert :ok = TokenStore.clear()
+    assert :error = TokenStore.find({:default, "scope1"}, nil)
+    assert :error = TokenStore.find({:default, "scope2"}, nil)
+  end
 end

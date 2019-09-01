@@ -61,6 +61,12 @@ defmodule Goth.TokenStore do
     GenServer.call(__MODULE__, {:find, {account, scope, sub}})
   end
 
+  @doc """
+  Clears all cached tokens in the `TokenStore`.
+  """
+  @spec clear() :: :ok
+  def clear, do: GenServer.call(__MODULE__, :clear)
+
   # when we store a token, we should refresh it later
   def handle_call({:store, {account, scope, sub}, token}, _from, state) do
     # this is a race condition when inserting an expired (or about to expire) token...
@@ -74,6 +80,8 @@ defmodule Goth.TokenStore do
     |> filter_expired(:os.system_time(:seconds))
     |> reply(state, {account, scope, sub})
   end
+
+  def handle_call(:clear, _from, _state), do: {:reply, :ok, %{}}
 
   defp filter_expired(:error, _), do: :error
 
